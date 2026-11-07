@@ -1,7 +1,5 @@
 package net.wigle.wigleandroid;
 
-import static net.wigle.wigleandroid.util.PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_KEY;
-import static net.wigle.wigleandroid.util.PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_STYLE;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -26,6 +24,7 @@ import net.wigle.wigleandroid.model.LatLng;
 import net.wigle.wigleandroid.model.Network;
 import net.wigle.wigleandroid.ui.ThemeUtil;
 import net.wigle.wigleandroid.util.FossConfigDialogUtil;
+import net.wigle.wigleandroid.util.FossMapStyleUtil;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
 
@@ -132,19 +131,7 @@ public class FossMappingFragment extends AbstractMappingFragment {
             return;
         }
         mapView.getMapAsync(mapLibreMap -> {
-            final String mapServerKey = prefs != null ?
-                    prefs.getString(PREF_FOSS_MAPS_VECTOR_TILE_KEY, null) : null;
-            final String mapServerUrl = prefs != null ?
-                    prefs.getString(PREF_FOSS_MAPS_VECTOR_TILE_STYLE, null) : null;
-
-            //TODO: day/night style?
-            String styleUrl;
-            if (mapServerKey != null && !mapServerKey.isEmpty()) {
-                styleUrl = mapServerUrl + mapServerKey;
-                //e.g. "https://api.maptiler.com/maps/streets-v2/style.json?key=" + mapServerKey;
-            } else {
-                styleUrl = "https://demotiles.maplibre.org/style.json";
-            }
+            final String styleUrl = FossMapStyleUtil.getConfiguredStyleUrl(prefs);
             try {
                 mapLibreMap.setStyle(styleUrl, style -> {
                     final Activity activity = getActivity();

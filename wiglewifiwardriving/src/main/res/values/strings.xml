@@ -157,6 +157,12 @@
     <string name="found_time">Found Time</string>
     <string name="signal">Signal</string>
     <string name="ssid">SSID</string>
+    <string name="sort_mac_bssid">MAC / BSSID</string>
+    <string name="show_wifi_distance">Show approximate Wi-Fi distance in the live list</string>
+    <string name="wifi_distance_note">RSSI-based range is a rough guess, not a measurement. Walls, AP transmit power and antennas can change it greatly. Calibrate against a known 1 m distance for better relative results.</string>
+    <string name="wifi_reference_rssi">RSSI at 1 m (2.4 GHz equivalent)</string>
+    <string name="wifi_path_loss">Path-loss exponent</string>
+    <string name="wifi_frequency_with_range">%1$d MHz  ≈%2$s m</string>
     <string name="bssid">BSSID</string>
     <string name="best_results">For best results, unset "Network notification" in "Wireless &amp; networks"-&gt;"WiFi settings"</string>
     <string name="turn_on_wifi">Please turn on WiFi</string>
@@ -482,8 +488,8 @@
     <string name="alert_ble_mfgrs_filter_button">Alert on BLE Manufacturers</string>
     <string name="guess_le_address_type">Infer BLE Address Type</string>
     <string name="use_foss_maps">Use FOSS Maps (tile URL required)</string>
-    <string name="foss_map_base_url">Map vector tile server style URL base</string>
-    <string name="foss_map_key">Map vector base key</string>
+    <string name="foss_map_base_url">Map style URL (OpenFreeMap by default)</string>
+    <string name="foss_map_key">API key (optional)</string>
     <string name="check_credentials">Verify</string>
     <string name="delete_gpx_detail">Are you sure you want to delete the selected route?</string>
     <string name="delete_gpx">Delete Route</string>

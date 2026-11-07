@@ -136,6 +136,52 @@
         android:layout_height="wrap_content"
         android:text="@string/display_inline_histograms" />
 
+    <CheckBox android:id="@+id/show_wifi_distance"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/show_wifi_distance" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="8dp"
+        android:textSize="12sp"
+        android:text="@string/wifi_distance_note" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_reference_rssi" />
+        <Spinner
+            android:id="@+id/wifi_reference_rssi_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_path_loss" />
+        <Spinner
+            android:id="@+id/wifi_path_loss_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
     <CheckBox android:id="@+id/use_metric"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -320,7 +366,7 @@
             android:id="@+id/edit_foss_map_server_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:placeholderText="e.g. https://api.maptiler.com/maps/streets-v2/style.json?key="
+            app:placeholderText="https://tiles.openfreemap.org/styles/liberty"
             android:hint="@string/foss_map_base_url">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_foss_map_style_url"

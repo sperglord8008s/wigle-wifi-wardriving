@@ -2,8 +2,6 @@ package net.wigle.wigleandroid;
 
 import static android.view.View.GONE;
 
-import static net.wigle.wigleandroid.util.PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_KEY;
-import static net.wigle.wigleandroid.util.PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_STYLE;
 
 import android.app.Activity;
 import android.content.Context;
@@ -24,6 +22,7 @@ import net.wigle.wigleandroid.model.LatLng;
 import net.wigle.wigleandroid.model.MapBounds;
 import net.wigle.wigleandroid.model.QueryArgs;
 import net.wigle.wigleandroid.util.FossConfigDialogUtil;
+import net.wigle.wigleandroid.util.FossMapStyleUtil;
 import net.wigle.wigleandroid.util.GeocodingUtil;
 import net.wigle.wigleandroid.util.Logging;
 
@@ -121,19 +120,7 @@ public class FossSearchFragment extends AbstractSearchFragment {
 
         if (null != mapView) {
             mapView.getMapAsync(mapLibreMap -> {
-                // Use style URL if API key is available, otherwise fall back to demo tiles
-                final String mapServerKey = prefs != null ?
-                        prefs.getString(PREF_FOSS_MAPS_VECTOR_TILE_KEY, null) : null;
-                final String mapServerUrl = prefs != null ?
-                        prefs.getString(PREF_FOSS_MAPS_VECTOR_TILE_STYLE, null) : null;
-
-                //TODO: day/night style?
-                String styleUrl;
-                if (mapServerKey != null && !mapServerKey.isEmpty()) {
-                    styleUrl = mapServerUrl + mapServerKey;
-                } else {
-                    styleUrl = "https://demotiles.maplibre.org/style.json";
-                }
+                final String styleUrl = FossMapStyleUtil.getConfiguredStyleUrl(prefs);
 
                 try {
                     mapLibreMap.setStyle(styleUrl);

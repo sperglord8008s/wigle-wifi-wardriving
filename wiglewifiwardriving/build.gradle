@@ -44,6 +44,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Keep test builds installable beside the Play Store/F-Droid signed WiGLE app.
+            applicationIdSuffix '.custom'
+            versionNameSuffix '-custom'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'

@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "foss-custom" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "foss-custom" ]
 
 jobs:
   build:
@@ -19,11 +19,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-    - name: Update API KEY from Secrets
-      env: 
-        MAPS_KEY: ${{ secrets.CI_DUMMY_MAPS_API_KEY }}
-      run: echo MAPS_API_KEY="$env:MAPS_KEY" > ./local.properties
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew testDebugUnitTest assembleDebug -PwigleFossMain=true
+    - name: Upload installable debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: wigle-wifi-foss-custom-debug-apk
+        path: wiglewifiwardriving/build/outputs/apk/debug/*.apk
+        if-no-files-found: error

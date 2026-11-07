@@ -28,8 +28,10 @@ import net.wigle.wigleandroid.model.OUI;
 import net.wigle.wigleandroid.model.RssiSample;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
+import net.wigle.wigleandroid.util.RssiDistanceEstimator;
 import net.wigle.wigleandroid.util.RssiHistoryCache;
 
+import java.text.NumberFormat;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -45,6 +47,7 @@ public final class SetNetworkListAdapter extends AbstractListAdapter<Network> {
     private final boolean historical;
     private final MainActivity mainActivity;
     private final SharedPreferences prefs;
+    private final NumberFormat distanceFormat = NumberFormat.getNumberInstance();
 
     public SetNetworkListAdapter(final Context context, final boolean historical, final int rowLayout) {
         super(context, rowLayout);
@@ -54,6 +57,7 @@ public final class SetNetworkListAdapter extends AbstractListAdapter<Network> {
         }
         mainActivity = MainActivity.getMainActivity();
         prefs = context.getSharedPreferences(PreferenceKeys.SHARED_PREFS, Context.MODE_PRIVATE);
+        distanceFormat.setMaximumFractionDigits(1);
     }
 
     public void updateBssidFilterMatcher() {
@@ -312,7 +316,21 @@ public final class SetNetworkListAdapter extends AbstractListAdapter<Network> {
         holder.mac.setText(network.getBssid());
 
         if (NetworkType.WIFI.equals(network.getType())) {
-            holder.chanFreq.setText(network.getFrequency()+"MHz");
+            final int frequency = network.getFrequency();
+            final boolean showEstimate = !historical && prefs.getBoolean(
+                    PreferenceKeys.PREF_SHOW_WIFI_DISTANCE, true);
+            final double metres = showEstimate ? RssiDistanceEstimator.estimateMeters(
+                    level, frequency,
+                    prefs.getInt(PreferenceKeys.PREF_WIFI_RSSI_AT_ONE_METER,
+                            RssiDistanceEstimator.DEFAULT_RSSI_AT_ONE_METER),
+                    prefs.getInt(PreferenceKeys.PREF_WIFI_PATH_LOSS_TENTHS,
+                            RssiDistanceEstimator.DEFAULT_PATH_LOSS_TENTHS)) : Double.NaN;
+            if (Double.isFinite(metres)) {
+                holder.chanFreq.setText(getContext().getString(R.string.wifi_frequency_with_range,
+                        frequency, distanceFormat.format(metres)));
+            } else {
+                holder.chanFreq.setText(frequency + "MHz");
+            }
         } else if (BLE.equals(network.getType())) {
             holder.chanFreq.setText(network.getType().toString());
         } else {

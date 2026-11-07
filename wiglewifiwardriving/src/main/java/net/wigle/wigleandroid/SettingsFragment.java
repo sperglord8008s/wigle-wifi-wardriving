@@ -72,8 +72,10 @@ import net.wigle.wigleandroid.ui.PrefsBackedCheckbox;
 import net.wigle.wigleandroid.ui.WiGLEConfirmationDialog;
 import net.wigle.wigleandroid.ui.WiGLEToast;
 import net.wigle.wigleandroid.util.FileUtility;
+import net.wigle.wigleandroid.util.FossMapStyleUtil;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
+import net.wigle.wigleandroid.util.RssiDistanceEstimator;
 import net.wigle.wigleandroid.util.SettingsUtil;
 
 import org.jetbrains.annotations.NotNull;
@@ -538,6 +540,16 @@ public final class SettingsFragment extends Fragment implements DialogListener {
         // period spinners
         final Context c = getContext();
         if (null != c) {
+            SettingsUtil.doSpinner(R.id.wifi_reference_rssi_spinner, view,
+                    PreferenceKeys.PREF_WIFI_RSSI_AT_ONE_METER,
+                    RssiDistanceEstimator.DEFAULT_RSSI_AT_ONE_METER,
+                    new Integer[]{-30, -35, -40, -45, -50, -55, -60},
+                    new String[]{"−30 dBm", "−35 dBm", "−40 dBm", "−45 dBm", "−50 dBm", "−55 dBm", "−60 dBm"}, c);
+            SettingsUtil.doSpinner(R.id.wifi_path_loss_spinner, view,
+                    PreferenceKeys.PREF_WIFI_PATH_LOSS_TENTHS,
+                    RssiDistanceEstimator.DEFAULT_PATH_LOSS_TENTHS,
+                    new Integer[]{20, 25, 30, 35, 40, 45, 50},
+                    new String[]{"2.0", "2.5", "3.0", "3.5", "4.0", "4.5", "5.0"}, c);
             SettingsUtil.doScanSpinner(R.id.periodstill_spinner, PreferenceKeys.PREF_SCAN_PERIOD_STILL,
                     MainActivity.SCAN_STILL_DEFAULT, getString(R.string.nonstop), view, c);
             SettingsUtil.doScanSpinner(R.id.period_spinner, PreferenceKeys.PREF_SCAN_PERIOD,
@@ -557,6 +569,8 @@ public final class SettingsFragment extends Fragment implements DialogListener {
                             s.rssiHistoryCache.setEnabled(value);
                         }
                     });
+            PrefsBackedCheckbox.prefBackedCheckBox(thisActivity, view, R.id.show_wifi_distance,
+                    PreferenceKeys.PREF_SHOW_WIFI_DISTANCE, true);
             PrefsBackedCheckbox.prefBackedCheckBox(thisActivity, view, R.id.use_metric, PreferenceKeys.PREF_METRIC, false);
             PrefsBackedCheckbox.prefBackedCheckBox(thisActivity, view, R.id.found_sound, PreferenceKeys.PREF_FOUND_SOUND, true);
             PrefsBackedCheckbox.prefBackedCheckBox(thisActivity, view, R.id.found_new_sound, PreferenceKeys.PREF_FOUND_NEW_SOUND, true);
@@ -834,8 +848,6 @@ public final class SettingsFragment extends Fragment implements DialogListener {
                 final String keyCandidate = keyPart == null ? "" : keyPart.toString().trim();
                 if (urlCandidate.isEmpty()) {
                     fossMapStyleUrlEdit.setError("required");
-                } else if (keyCandidate.isEmpty()) {
-                    fossMapKeyEdit.setError("required");
                 } else {
                     final String concat = urlCandidate + keyCandidate;
                     final HttpUrl httpUrl = HttpUrl.parse(concat);
@@ -876,7 +888,11 @@ public final class SettingsFragment extends Fragment implements DialogListener {
                                                 });
                                             } else if (response.code() == 401 || response.code() == 403) {
                                                 mainHandler.post(() -> {
-                                                    fossMapKeyEdit.setError("required");
+                                            if (keyCandidate.isEmpty()) {
+                                                fossMapStyleUrlEdit.setError("Provider requires authorization");
+                                            } else {
+                                                fossMapKeyEdit.setError("invalid API key");
+                                            }
                                                     hideProgressCenterFail(verify);
                                                 });
                                             } else {
@@ -898,7 +914,8 @@ public final class SettingsFragment extends Fragment implements DialogListener {
         }
 
         if (fossMapStyleUrlEdit != null) {
-            final String currentStyleUrl = prefs.getString(PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_STYLE, "");
+            final String currentStyleUrl = prefs.getString(PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_STYLE,
+                    FossMapStyleUtil.DEFAULT_STYLE_URL);
             fossMapStyleUrlEdit.setText(currentStyleUrl);// Add listener to save changes
             fossMapStyleUrlEdit.addTextChangedListener(new SetWatcher() {
                 @Override

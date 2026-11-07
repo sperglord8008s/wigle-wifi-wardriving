@@ -20,6 +20,26 @@ As of January 2023, this application supports Android SDK versions 24 (Nougat) a
 - Perform WiFi site surveys on a per-BSSID basis
 - Register for proximity notifications based on the basis MAC, OUI, or Bluetooth LE manufacturer IDs
 
+### Additions in this fork
+- **MAC / BSSID sort** in the network-list Sort menu (ascending full address).
+- **Approximate Wi-Fi range** beside the channel frequency in the live network list. This is an
+  RSSI/path-loss *estimate*, not a true distance measurement or an AP position fix. The result
+  depends heavily on transmitter power, walls, antenna orientation, and multipath.
+- Settings allow the display to be disabled and the 1-metre RSSI reference and indoor path-loss
+  exponent to be adjusted. For useful relative estimates, take a reading about one metre from
+  a known AP, then adjust the RSSI reference. The default is −40 dBm at 2412 MHz, exponent 3.0.
+- **Open-source maps by default:** the upstream `foss-main` MapLibre renderer now uses
+  OpenFreeMap's keyless Liberty vector style (OpenStreetMap data), including the network,
+  search and GPX screens. A custom or self-hosted map style URL can still be configured;
+  API keys are optional. This branch does not include Google Maps or Play Services.
+
+Per-BSSID site surveys and colour-coded KML point exports already exist in upstream WiGLE.
+An interpolated heatmap of the currently connected AP is a possible separate extension.
+
+The fork's GitHub Actions build uploads an unsigned-for-release, debug-signed APK as a workflow
+artifact. Its application ID ends in `.custom`, so it can be installed beside the official app
+without replacing it. This is a development build; it does not receive Play Store/F-Droid updates.
+
 ## What WiGLE Wireless Wardriving is NOT
 - A free WiFi finder - WiGLE is a map of all WiFi, free or otherwise
 - A tool for accessing networks without authorization - we do not condone or facilitate unauthorized. Always follow all local ordinances with stumbling
