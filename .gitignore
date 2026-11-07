@@ -31,3 +31,7 @@ local.properties
 .settings
 *.db
 wiglewifiwardriving/release/wiglewifiwardriving-release.aab
+# Never commit an unencrypted Android signing key.
+*.p12
+*.jks
+*.keystore

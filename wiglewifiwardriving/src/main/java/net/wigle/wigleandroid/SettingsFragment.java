@@ -72,6 +72,7 @@ import net.wigle.wigleandroid.ui.PrefsBackedCheckbox;
 import net.wigle.wigleandroid.ui.WiGLEConfirmationDialog;
 import net.wigle.wigleandroid.ui.WiGLEToast;
 import net.wigle.wigleandroid.util.FileUtility;
+import net.wigle.wigleandroid.util.CustomUploadConfig;
 import net.wigle.wigleandroid.util.FossMapStyleUtil;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
@@ -282,6 +283,22 @@ public final class SettingsFragment extends Fragment implements DialogListener {
         if (activity == null) return;
         final SharedPreferences prefs = activity.getSharedPreferences(PreferenceKeys.SHARED_PREFS, 0);
         final Editor editor = prefs.edit();
+
+        final EditText customUploadEndpoint = view.findViewById(R.id.custom_upload_endpoint);
+        customUploadEndpoint.setText(CustomUploadConfig.getEndpoint(prefs));
+        customUploadEndpoint.addTextChangedListener(new SetWatcher() {
+            @Override
+            public void onTextChanged(final String text) {
+                final String newEndpoint = text.trim();
+                customUploadEndpoint.setError(newEndpoint.isEmpty() || CustomUploadConfig.isValidHttpsUrl(newEndpoint)
+                        ? null : getString(R.string.custom_upload_invalid));
+                if (!newEndpoint.equals(CustomUploadConfig.getEndpoint(prefs))) {
+                    prefs.edit().putString(PreferenceKeys.PREF_CUSTOM_UPLOAD_URL, newEndpoint)
+                            // New destinations must receive the full backlog on first upload.
+                            .putLong(PreferenceKeys.PREF_CUSTOM_DB_MARKER, 0L).apply();
+                }
+            }
+        });
 
         // donate
         final CheckBox donate = view.findViewById(R.id.donate);

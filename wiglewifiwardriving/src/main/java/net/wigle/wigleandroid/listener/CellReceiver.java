@@ -5,6 +5,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityNr;
 import android.telephony.CellInfo;
@@ -56,6 +57,7 @@ import java.util.concurrent.Executors;
  */
 public class CellReceiver {
     public static final int CELL_MIN_STRENGTH = -113;
+    private static final long CELL_DISPLAY_HOLD_MS = 60000L;
 
     /**
      * data transfer object from binder-call laden background processing
@@ -89,6 +91,7 @@ public class CellReceiver {
     private Handler cellTimer;
     private SetNetworkListAdapter listAdapter;
     private final Set<String> runCells = new HashSet<>();
+    private long lastNonEmptyCellSnapshotMs = 0L;
 
     public CellReceiver(final MainActivity mainActivity, final DatabaseHelper dbHelper, final Context context) {
         this.mainActivity = mainActivity;
@@ -186,12 +189,22 @@ public class CellReceiver {
                 ListFragment.lameStatic.currNets = ListFragment.lameStatic.currWifi + ListFragment.lameStatic.currCells;
                 final boolean showCurrent = prefs.getBoolean(PreferenceKeys.PREF_SHOW_CURRENT, true);
                 if (showCurrent && listAdapter != null) {
-                    final java.util.regex.Matcher ssidMatcher = FilterMatcher.getSsidFilterMatcher(prefs, PreferenceKeys.FILTER_PREF_PREFIX);
-                    final java.util.regex.Matcher bssidMatcher = mainActivity.getBssidFilterMatcher(PreferenceKeys.PREF_EXCLUDE_DISPLAY_ADDRS);
-                    for (Network cellNetwork : cellNetworks.values()) {
-                        if (cellNetwork != null && FilterMatcher.isOk(ssidMatcher, bssidMatcher, prefs, PreferenceKeys.FILTER_PREF_PREFIX, cellNetwork)) {
-                            listAdapter.addCell(cellNetwork);
+                    final long elapsed = SystemClock.elapsedRealtime();
+                    if (!cellNetworks.isEmpty()) {
+                        lastNonEmptyCellSnapshotMs = elapsed;
+                        listAdapter.clearCell();
+                        final java.util.regex.Matcher ssidMatcher = FilterMatcher.getSsidFilterMatcher(prefs, PreferenceKeys.FILTER_PREF_PREFIX);
+                        final java.util.regex.Matcher bssidMatcher = mainActivity.getBssidFilterMatcher(PreferenceKeys.PREF_EXCLUDE_DISPLAY_ADDRS);
+                        for (Network cellNetwork : cellNetworks.values()) {
+                            if (cellNetwork != null && FilterMatcher.isOk(ssidMatcher, bssidMatcher, prefs, PreferenceKeys.FILTER_PREF_PREFIX, cellNetwork)) {
+                                listAdapter.addCell(cellNetwork);
+                            }
                         }
+                    } else if (lastNonEmptyCellSnapshotMs == 0L
+                            || elapsed - lastNonEmptyCellSnapshotMs > CELL_DISPLAY_HOLD_MS) {
+                        // Android sometimes returns an empty/throttled cell snapshot.
+                        // Keep the previous entries for a short grace period.
+                        listAdapter.clearCell();
                     }
                 }
                 NetworkListUtil.sort(prefs, listAdapter);
@@ -278,27 +291,31 @@ public class CellReceiver {
                 case "CellInfoGsm": {
                     GsmOperator g = new GsmOperator(((CellInfoGsm) cellInfo).getCellIdentity());
                     CellSignalStrengthGsm cellStrengthG = ((CellInfoGsm) cellInfo).getCellSignalStrength();
-                    return addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "GSM",
+                    final Network network = addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "GSM",
                             cellStrengthG.getDbm(), NetworkType.typeForCode("G"), location);
+                    return withRadioInfo(network, cellInfo, "BSIC", ((CellInfoGsm) cellInfo).getCellIdentity().getBsic());
                 }
                 case "CellInfoLte": {
                     GsmOperator g = new GsmOperator(((CellInfoLte) cellInfo).getCellIdentity());
                     CellSignalStrengthLte cellStrengthL = ((CellInfoLte) cellInfo).getCellSignalStrength();
-                    return addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "LTE",
+                    final Network network = addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "LTE",
                             cellStrengthL.getDbm(), NetworkType.typeForCode("L"), location);
+                    return withRadioInfo(network, cellInfo, "PCI", ((CellInfoLte) cellInfo).getCellIdentity().getPci());
                 }
                 case "CellInfoWcdma": {
                     GsmOperator g = new GsmOperator(((CellInfoWcdma) cellInfo).getCellIdentity());
                     CellSignalStrengthWcdma cellStrengthW = ((CellInfoWcdma) cellInfo).getCellSignalStrength();
-                    return addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "WCDMA",
+                    final Network network = addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "WCDMA",
                             cellStrengthW.getDbm(), NetworkType.typeForCode("D"), location);
+                    return withRadioInfo(network, cellInfo, "PSC", ((CellInfoWcdma) cellInfo).getCellIdentity().getPsc());
                 }
                 case "CellInfoNr":
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         GsmOperator g = new GsmOperator((CellIdentityNr) ((CellInfoNr) cellInfo).getCellIdentity());
                         CellSignalStrength cellStrength = ((CellInfoNr) cellInfo).getCellSignalStrength();
-                        return addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "NR",
+                        final Network network = addOrUpdateCell(g.getOperatorKeyString(), g.getOperatorString(), g.getXfcn(), "NR",
                                 cellStrength.getDbm(), NetworkType.typeForCode("N"), location);
+                        return withRadioInfo(network, cellInfo, "PCI", ((CellIdentityNr) ((CellInfoNr) cellInfo).getCellIdentity()).getPci());
                     }
                     break;
                 default:
@@ -309,6 +326,18 @@ public class CellReceiver {
             // skip invalid cell data
         }
         return null;
+    }
+
+    private static Network withRadioInfo(final Network network, final CellInfo source,
+                                         final String physicalIdLabel, final int physicalId) {
+        if (network != null) {
+            final StringBuilder detail = new StringBuilder(source.isRegistered() ? "Serving" : "Neighbour");
+            if (physicalId >= 0 && physicalId != Integer.MAX_VALUE) {
+                detail.append(" · ").append(physicalIdLabel).append(' ').append(physicalId);
+            }
+            network.setCellRadioInfo(detail.toString());
+        }
+        return network;
     }
 
     private Network handleSingleCellLocation(final CellLocation cellLocation,
@@ -412,7 +441,8 @@ public class CellReceiver {
         }
         final String networkKey = systemIdInt + "_" + netIdInt + "_" + bssIdInt;
         final int dBmLevel = cellStrengthC.getDbm();
-        return addOrUpdateCell(networkKey, networkOperator, 0, "CDMA", dBmLevel, NetworkType.typeForCode("C"), location);
+        final Network network = addOrUpdateCell(networkKey, networkOperator, 0, "CDMA", dBmLevel, NetworkType.typeForCode("C"), location);
+        return withRadioInfo(network, cellInfo, "", -1);
     }
 
     private Network addOrUpdateCell(final String bssid, final String operator,

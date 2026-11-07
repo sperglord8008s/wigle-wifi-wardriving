@@ -25,6 +25,24 @@ public class NetworkListSorterTest {
         assertEquals(Arrays.asList(first, middle, last), networks);
     }
 
+    @Test
+    public void suffixSortPlacesDifferentOuiWithSameTailTogether() {
+        final Network differentTail = wifi("10:20:33:44:55:67");
+        final Network radioOne = wifi("aa:bb:33:44:55:66");
+        final Network radioTwo = wifi("cc:dd:33:44:55:66");
+        final List<Network> networks = new ArrayList<>(Arrays.asList(radioTwo, differentTail, radioOne));
+
+        Collections.sort(networks, NetworkListSorter.macSuffixCompare);
+
+        assertEquals(Arrays.asList(radioOne, radioTwo, differentTail), networks);
+    }
+
+    @Test
+    public void suffixKeyAcceptsMixedCaseAndAlternativeSeparators() {
+        assertEquals("33445566aabb", NetworkListSorter.suffixFirstBssidKey("AA-BB-33-44-55-66"));
+        assertEquals("33445566aabb", NetworkListSorter.suffixFirstBssidKey("aa:bb:33:44:55:66"));
+    }
+
     private Network wifi(final String bssid) {
         return new Network(bssid, "Same SSID", 2412, "[WPA2-PSK-CCMP][ESS]", -65, NetworkType.WIFI);
     }

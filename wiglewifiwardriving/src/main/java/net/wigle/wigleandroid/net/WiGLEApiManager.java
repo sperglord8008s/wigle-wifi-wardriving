@@ -31,6 +31,7 @@ import net.wigle.wigleandroid.model.api.UserStats;
 import net.wigle.wigleandroid.model.api.WiFiSearchResponse;
 import net.wigle.wigleandroid.model.api.WiGLENews;
 import net.wigle.wigleandroid.util.FileAccess;
+import net.wigle.wigleandroid.util.CustomUploadConfig;
 import net.wigle.wigleandroid.util.FileUtility;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
@@ -45,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -611,6 +613,14 @@ public class WiGLEApiManager {
                        final Handler handler,
                        @NotNull final RequestCompletedListener<UploadReseponse,
             JSONObject> completedListener) {
+        final SharedPreferences prefs = context.getSharedPreferences(PreferenceKeys.SHARED_PREFS, 0);
+        final String customUrl = CustomUploadConfig.getEndpoint(prefs);
+        final boolean customUpload = !customUrl.isEmpty();
+        if (customUpload && !CustomUploadConfig.isValidHttpsUrl(customUrl)) {
+            Logging.error("Invalid custom upload URL: HTTPS URL without embedded credentials required");
+            completedListener.onTaskFailed(LOCAL_FAILURE_CODE, null);
+            return;
+        }
         MultipartBody.Builder builder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart(fileParamName, filename,
@@ -633,11 +643,15 @@ public class WiGLEApiManager {
             }
         });
         OkHttpClient client = unauthedClient;
-        if (authedClient != null) {
+        if (customUpload) {
+            // Never send WiGLE API tokens or credentials to a user-specified host.
+            // Do not automatically forward location-bearing CSVs to redirects.
+            client = unauthedClient.newBuilder().followRedirects(false).build();
+        } else if (authedClient != null) {
             client = authedClient;
         }
         Request request = new Request.Builder()
-                .url(FILE_POST_URL)
+                .url(customUpload ? customUrl : FILE_POST_URL)
                 .post(countingBody)
                 .build();
 
@@ -647,6 +661,16 @@ public class WiGLEApiManager {
                     if (!response.isSuccessful()) {
                         Logging.error("Failed to upload file: " + response.code() + " " + response.message());
                         completedListener.onTaskFailed(response.code(), null);
+                    } else if (customUpload) {
+                        // Generic endpoint contract: any 2xx is an acknowledgement.
+                        // No WiGLE response JSON or transaction IDs are required.
+                        final UploadReseponse result = new UploadReseponse();
+                        result.setSuccess(true);
+                        final UploadReseponse.UploadResultsResponse results = result.new UploadResultsResponse();
+                        results.setTransids(Collections.emptyList());
+                        result.setResults(results);
+                        completedListener.onTaskSucceeded(result);
+                        response.close();
                     } else {
                         if (null != response.body()) {
                             try (ResponseBody responseBody = response.body()) {

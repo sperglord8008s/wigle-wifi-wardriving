@@ -190,7 +190,9 @@ public class WifiReceiver extends BroadcastReceiver {
 
         final boolean showCurrent = prefs.getBoolean( PreferenceKeys.PREF_SHOW_CURRENT, true );
         if ( showCurrent && listAdapter != null ) {
-            listAdapter.clearWifiAndCell();
+            // CellReceiver refreshes cells on a separate timer. Clearing them here
+            // caused a tower to flash briefly, then vanish on the next Wi-Fi scan.
+            listAdapter.clearWifi();
         }
 
         final int preQueueSize = dbHelper.getQueueSize();

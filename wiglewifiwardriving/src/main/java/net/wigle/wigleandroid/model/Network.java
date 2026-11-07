@@ -59,6 +59,8 @@ public final class Network {
     private boolean passpoint;
 
     private String detail;
+    // Live-only cellular radio metadata (registration state / PCI / PSC / BSIC).
+    private String cellRadioInfo;
     private final long constructionTime = System.currentTimeMillis(); // again
 
     private static final String BAR_STRING = " | ";
@@ -418,6 +420,14 @@ public final class Network {
         }
 
         return detail;
+    }
+
+    public String getCellRadioInfo() {
+        return cellRadioInfo;
+    }
+
+    public void setCellRadioInfo(final String cellRadioInfo) {
+        this.cellRadioInfo = cellRadioInfo;
     }
 
     public void setLatLng(LatLng geoPoint) {

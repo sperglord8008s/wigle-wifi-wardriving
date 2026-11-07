@@ -142,5 +142,17 @@
 				style="@style/ListDetail"
 				tools:text="[WPA2][RSN][ESS][WPS]"/>
 		</LinearLayout>
+		<TextView
+			android:id="@+id/cell_radio_info"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:paddingStart="27dp"
+			android:paddingEnd="4dp"
+			android:textSize="11sp"
+			android:maxLines="3"
+			android:visibility="gone"
+			style="@style/ListDetail"
+			tools:visibility="visible"
+			tools:text="Serving · PCI 184 · MCC 505 MNC 03 · TAC 4501 · NCI 123456789 · NRARFCN 642144"/>
 	</LinearLayout>
 </FrameLayout>

@@ -102,6 +102,26 @@
         android:layout_height="wrap_content"
         android:text="@string/donate" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/WiGLESectionHeader"
+        android:text="@string/custom_upload_heading" />
+    <EditText
+        android:id="@+id/custom_upload_endpoint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textUri"
+        android:singleLine="true"
+        android:hint="@string/custom_upload_hint"
+        android:importantForAutofill="no" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="8dp"
+        android:textSize="12sp"
+        android:text="@string/custom_upload_note" />
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"

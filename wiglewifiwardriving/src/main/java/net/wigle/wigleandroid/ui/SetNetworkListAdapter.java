@@ -27,6 +27,7 @@ import net.wigle.wigleandroid.model.NetworkType;
 import net.wigle.wigleandroid.model.OUI;
 import net.wigle.wigleandroid.model.RssiSample;
 import net.wigle.wigleandroid.util.Logging;
+import net.wigle.wigleandroid.util.CellDisplayUtil;
 import net.wigle.wigleandroid.util.PreferenceKeys;
 import net.wigle.wigleandroid.util.RssiDistanceEstimator;
 import net.wigle.wigleandroid.util.RssiHistoryCache;
@@ -337,7 +338,15 @@ public final class SetNetworkListAdapter extends AbstractListAdapter<Network> {
             holder.chanFreq.setText("");
         }
 
-        holder.detail.setText(network.getDetail());
+        if (CellDisplayUtil.isCell(network.getType())) {
+            holder.detail.setText(network.getType().toString());
+            holder.cellRadioInfo.setText(CellDisplayUtil.describe(network));
+            holder.cellRadioInfo.setVisibility(VISIBLE);
+        } else {
+            holder.detail.setText(network.getDetail());
+            holder.cellRadioInfo.setText("");
+            holder.cellRadioInfo.setVisibility(GONE);
+        }
 
         return row;
     }
@@ -380,6 +389,7 @@ public final class SetNetworkListAdapter extends AbstractListAdapter<Network> {
         final TextView mac;
         final TextView chanFreq;
         final TextView detail;
+        final TextView cellRadioInfo;
         RssiHistogramDrawable histogramDrawable;
 
         ViewHolder(final View row) {
@@ -395,6 +405,7 @@ public final class SetNetworkListAdapter extends AbstractListAdapter<Network> {
             mac = row.findViewById(R.id.mac_string);
             chanFreq = row.findViewById(R.id.chan_freq_string);
             detail = row.findViewById(R.id.detail);
+            cellRadioInfo = row.findViewById(R.id.cell_radio_info);
         }
     }
 }

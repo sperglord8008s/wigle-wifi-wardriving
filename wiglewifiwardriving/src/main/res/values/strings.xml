@@ -158,6 +158,12 @@
     <string name="signal">Signal</string>
     <string name="ssid">SSID</string>
     <string name="sort_mac_bssid">MAC / BSSID</string>
+    <string name="sort_mac_suffix">MAC suffix (related AP radios)</string>
+    <string name="custom_upload_heading">Custom upload destination (advanced)</string>
+    <string name="custom_upload_hint">https://your-server.example/upload</string>
+    <string name="custom_upload_note">Leave blank to upload to WiGLE. Otherwise, Upload sends WiGLE CSV as a multipart HTTPS POST (field: file) to this URL, without your WiGLE login or API token. Your server must accept that format and return HTTP 2xx. Upload history for WiGLE and your custom server are tracked separately. Your CSV contains scanned networks, GPS coordinates and device details; use a server you trust.</string>
+    <string name="custom_upload_confirm">Upload scanned network CSV to:\n%1$s\n\nThis sends GPS locations and device information to that server. No WiGLE credentials are sent. Continue?</string>
+    <string name="custom_upload_invalid">Enter a valid HTTPS URL without embedded username or password.</string>
     <string name="show_wifi_distance">Show approximate Wi-Fi distance in the live list</string>
     <string name="wifi_distance_note">RSSI-based range is a rough guess, not a measurement. Walls, AP transmit power and antennas can change it greatly. Calibrate against a known 1 m distance for better relative results.</string>
     <string name="wifi_reference_rssi">RSSI at 1 m (2.4 GHz equivalent)</string>

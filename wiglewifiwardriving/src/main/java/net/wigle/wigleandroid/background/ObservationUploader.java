@@ -30,6 +30,7 @@ import net.wigle.wigleandroid.util.FileUtility;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
 import net.wigle.wigleandroid.util.UrlConfig;
+import net.wigle.wigleandroid.util.CustomUploadConfig;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -149,7 +150,8 @@ public class ObservationUploader extends AbstractProgressApiRequest {
 
         final Bundle bundle = new Bundle();
         status = null;
-        if (!validAuth()) {
+        final SharedPreferences uploadPrefs = context.getSharedPreferences(PreferenceKeys.SHARED_PREFS, 0);
+        if (!CustomUploadConfig.isEnabled(uploadPrefs) && !validAuth()) {
             status = validateUserPass(username, password);
         }
         if ( status == null ) {
@@ -182,6 +184,11 @@ public class ObservationUploader extends AbstractProgressApiRequest {
             prefs = context.getSharedPreferences(PreferenceKeys.SHARED_PREFS, 0);
         }
         if (prefs != null) {
+            if (CustomUploadConfig.isEnabled(prefs)) {
+                // The user's HTTPS endpoint receives CSV without a WiGLE token.
+                start();
+                return;
+            }
             final boolean hasApiToken = TokenAccess.hasApiToken(prefs);
             final boolean beAnonymous = prefs.getBoolean(PreferenceKeys.PREF_BE_ANONYMOUS, false);
             final String authName = prefs.getString(PreferenceKeys.PREF_AUTHNAME, null);
@@ -219,12 +226,13 @@ public class ObservationUploader extends AbstractProgressApiRequest {
             final Map<String,String> params = new HashMap<>();
 
             final SharedPreferences prefs = context.getSharedPreferences( PreferenceKeys.SHARED_PREFS, 0);
-            if ( prefs.getBoolean(PreferenceKeys.PREF_DONATE, false) ) {
+            final boolean customUpload = CustomUploadConfig.isEnabled(prefs);
+            if (!customUpload && prefs.getBoolean(PreferenceKeys.PREF_DONATE, false)) {
                 params.put("donate","on");
             }
             final boolean beAnonymous = prefs.getBoolean(PreferenceKeys.PREF_BE_ANONYMOUS, false);
             final String authName = prefs.getString(PreferenceKeys.PREF_AUTHNAME, null);
-            if (!beAnonymous && null == authName) {
+            if (!customUpload && !beAnonymous && null == authName) {
                 status = Status.BAD_LOGIN;
                 sendBundledMessage(status.ordinal(), bundle);
                 return;
@@ -267,11 +275,15 @@ public class ObservationUploader extends AbstractProgressApiRequest {
                         if ( response != null && response.getSuccess() ) {
                             status = Status.SUCCESS;
                             final SharedPreferences.Editor editor = prefs.edit();
-                            editor.putLong( PreferenceKeys.PREF_DB_MARKER, maxId );
-                            if (!countStats.rowsCapped) {
-                                editor.putLong( PreferenceKeys.PREF_MAX_DB, maxId );
+                            if (customUpload) {
+                                editor.putLong(PreferenceKeys.PREF_CUSTOM_DB_MARKER, maxId);
+                            } else {
+                                editor.putLong( PreferenceKeys.PREF_DB_MARKER, maxId );
+                                if (!countStats.rowsCapped) {
+                                    editor.putLong( PreferenceKeys.PREF_MAX_DB, maxId );
+                                }
+                                editor.putLong( PreferenceKeys.PREF_NETS_UPLOADED, dbHelper.getNetworkCount() );
                             }
-                            editor.putLong( PreferenceKeys.PREF_NETS_UPLOADED, dbHelper.getNetworkCount() );
                             editor.apply();
                             final UploadReseponse.UploadResultsResponse uploadResults = response.getResults();
                             List<String> transIds = uploadResults.getTransids().stream()
@@ -392,12 +404,17 @@ public class ObservationUploader extends AbstractProgressApiRequest {
     /**
      * (directly lifted from FileUploadTask)
      */
+    private String getUploadMarkerKey(final SharedPreferences prefs) {
+        return !justWriteFile && !writeEntireDb && !writeRun && CustomUploadConfig.isEnabled(prefs)
+                ? PreferenceKeys.PREF_CUSTOM_DB_MARKER : PreferenceKeys.PREF_DB_MARKER;
+    }
+
     private long writeFile( final OutputStream fos, final Bundle bundle,
                             final ObservationUploader.CountStats countStats ) throws IOException,
             PackageManager.NameNotFoundException, InterruptedException, DBException {
 
         final SharedPreferences prefs = context.getSharedPreferences( PreferenceKeys.SHARED_PREFS, 0);
-        long maxId = prefs.getLong( PreferenceKeys.PREF_DB_MARKER, 0L );
+        long maxId = prefs.getLong(getUploadMarkerKey(prefs), 0L);
         if ( writeEntireDb ) {
             maxId = 0;
         }
@@ -427,7 +444,7 @@ public class ObservationUploader extends AbstractProgressApiRequest {
                                      final ObservationUploader.CountStats countStats,
                                      final Cursor cursor, final SharedPreferences prefs ) throws IOException,
             PackageManager.NameNotFoundException, InterruptedException {
-        long maxId = prefs.getLong( PreferenceKeys.PREF_DB_MARKER, 0L );
+        long maxId = prefs.getLong(getUploadMarkerKey(prefs), 0L);
 
         final long start = System.currentTimeMillis();
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);

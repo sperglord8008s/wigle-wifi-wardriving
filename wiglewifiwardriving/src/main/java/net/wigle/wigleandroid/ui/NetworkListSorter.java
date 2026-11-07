@@ -3,10 +3,12 @@ package net.wigle.wigleandroid.ui;
 import android.content.SharedPreferences;
 
 import net.wigle.wigleandroid.model.Network;
+import net.wigle.wigleandroid.model.NetworkType;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
 
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * Shared UI utility to define and access comparators for {@link net.wigle.wigleandroid.model.Network} objects
@@ -20,6 +22,7 @@ public class NetworkListSorter {
     public static final int FIND_TIME_COMPARE = 13;
     public static final int SSID_COMPARE = 14;
     public static final int MAC_COMPARE = 15;
+    public static final int MAC_SUFFIX_COMPARE = 16;
 
     public static final Comparator<Network> signalCompare = (a, b) -> b.getLevel() - a.getLevel();
 
@@ -34,6 +37,35 @@ public class NetworkListSorter {
     /** Sort the full MAC/BSSID, not just the vendor OUI prefix. */
     public static final Comparator<Network> macCompare = (a, b) ->
             String.CASE_INSENSITIVE_ORDER.compare(a.getBssid(), b.getBssid());
+
+    /**
+     * Place Wi-Fi BSSIDs sharing their last four octets next to one another,
+     * even if their first one or two octets differ. This is a visual grouping
+     * aid, not proof that two BSSIDs belong to the same physical access point.
+     */
+    public static final Comparator<Network> macSuffixCompare = (a, b) -> {
+        final boolean aWifi = NetworkType.WIFI.equals(a.getType());
+        final boolean bWifi = NetworkType.WIFI.equals(b.getType());
+        if (aWifi != bWifi) return aWifi ? -1 : 1;
+        if (!aWifi) return macCompare.compare(a, b);
+        return String.CASE_INSENSITIVE_ORDER.compare(
+                suffixFirstBssidKey(a.getBssid()), suffixFirstBssidKey(b.getBssid()));
+    };
+
+    static String suffixFirstBssidKey(final String bssid) {
+        if (bssid == null) return "";
+        final String normalized = bssid.replace(":", "").replace("-", "")
+                .toLowerCase(Locale.US);
+        if (normalized.length() != 12) return bssid.toLowerCase(Locale.US);
+        for (int i = 0; i < normalized.length(); i++) {
+            if (Character.digit(normalized.charAt(i), 16) < 0) {
+                return bssid.toLowerCase(Locale.US);
+            }
+        }
+        // Sort by 33:44:55:66 first, then AA:BB. AA:BB and CC:DD
+        // with that same tail will appear adjacent in the list.
+        return normalized.substring(4) + normalized.substring(0, 4);
+    }
 
     /**
      * Check preferences and return the correct comparator
@@ -60,6 +92,8 @@ public class NetworkListSorter {
                 return ssidCompare;
             case MAC_COMPARE:
                 return macCompare;
+            case MAC_SUFFIX_COMPARE:
+                return macSuffixCompare;
             default:
                 Logging.warn("fell through to default comparator");
                 return signalCompare;

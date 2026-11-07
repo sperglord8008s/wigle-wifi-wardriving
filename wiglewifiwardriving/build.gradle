@@ -22,6 +22,8 @@ def isFossMainBuild() {
 }
 
 def isAab = gradle.startParameter.taskNames.any { it.toLowerCase().contains("bundle") }
+def customSigningKeystore = System.getenv('WIGLE_SIGNING_KEYSTORE')
+def customSigningPassword = System.getenv('WIGLE_SIGNING_PASSWORD')
 
 apply plugin: 'com.android.application'
 apply plugin: 'de.undercouch.download'
@@ -43,11 +45,25 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        if (customSigningKeystore && customSigningPassword) {
+            fossCustom {
+                storeFile file(customSigningKeystore)
+                storePassword customSigningPassword
+                keyAlias 'wigle-foss-custom'
+                keyPassword customSigningPassword
+            }
+        }
+    }
+
     buildTypes {
         debug {
-            // Keep test builds installable beside the Play Store/F-Droid signed WiGLE app.
-            applicationIdSuffix '.custom'
+            // Replace the original package after uninstalling it. Android does not
+            // accept in-place updates from a different signing certificate.
             versionNameSuffix '-custom'
+            if (customSigningKeystore && customSigningPassword) {
+                signingConfig signingConfigs.fossCustom
+            }
         }
         release {
             minifyEnabled false

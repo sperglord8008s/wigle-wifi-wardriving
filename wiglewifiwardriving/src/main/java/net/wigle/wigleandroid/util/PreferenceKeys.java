@@ -17,6 +17,8 @@ public class PreferenceKeys {
     public static final String PREF_BE_ANONYMOUS = "beAnonymous";
     public static final String PREF_DONATE = "donate";
     public static final String PREF_DB_MARKER = "dbMarker";
+    public static final String PREF_CUSTOM_UPLOAD_URL = "customUploadUrl";
+    public static final String PREF_CUSTOM_DB_MARKER = "customUploadDbMarker";
     public static final String PREF_MAX_DB = "maxDbMarker";
     public static final String PREF_ROUTE_DB_RUN = "routeDbRun";
     public static final String PREF_NETS_UPLOADED = "netsUploaded";
