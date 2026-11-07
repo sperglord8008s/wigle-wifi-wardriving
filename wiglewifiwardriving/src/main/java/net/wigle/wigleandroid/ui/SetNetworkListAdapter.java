@@ -339,13 +339,20 @@ public final class SetNetworkListAdapter extends AbstractListAdapter<Network> {
         }
 
         if (CellDisplayUtil.isCell(network.getType())) {
-            holder.detail.setText(network.getType().toString());
-            holder.cellRadioInfo.setText(CellDisplayUtil.describe(network));
-            holder.cellRadioInfo.setVisibility(VISIBLE);
+            if (holder.cellRadioInfo != null) {
+                holder.detail.setText(network.getType().toString());
+                holder.cellRadioInfo.setText(CellDisplayUtil.describe(network));
+                holder.cellRadioInfo.setVisibility(VISIBLE);
+            } else {
+                // Defensive fallback if another qualified layout lacks this row.
+                holder.detail.setText(CellDisplayUtil.describe(network));
+            }
         } else {
             holder.detail.setText(network.getDetail());
-            holder.cellRadioInfo.setText("");
-            holder.cellRadioInfo.setVisibility(GONE);
+            if (holder.cellRadioInfo != null) {
+                holder.cellRadioInfo.setText("");
+                holder.cellRadioInfo.setVisibility(GONE);
+            }
         }
 
         return row;
