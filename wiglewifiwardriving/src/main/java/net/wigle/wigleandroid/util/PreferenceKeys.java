@@ -11,6 +11,9 @@ public class PreferenceKeys {
     public static final String PREF_TOKEN_TAG_LENGTH = "tokenTagLength";
     public static final String PREF_SHOW_CURRENT = "showCurrent";
     public static final String PREF_DISPLAY_INLINE_LIST_SIGNAL_HISTOGRAMS = "displayInlineListSignalHistograms";
+    public static final String PREF_SHOW_WIFI_DISTANCE = "showWifiDistanceEstimate";
+    public static final String PREF_WIFI_RSSI_AT_ONE_METER = "wifiRssiAtOneMeter";
+    public static final String PREF_WIFI_PATH_LOSS_TENTHS = "wifiPathLossTenths";
     public static final String PREF_BE_ANONYMOUS = "beAnonymous";
     public static final String PREF_DONATE = "donate";
     public static final String PREF_DB_MARKER = "dbMarker";
@@ -110,6 +113,7 @@ public class PreferenceKeys {
     public static final String PREF_GUESS_BLE_ADDRESS_TYPE = "guessBleAddressType";
     //[remove this key and all checks based on it (default to true) for FOSS build]
     public static final String PREF_USE_FOSS_MAPS = "useFossMaps";
+    public static final boolean DEFAULT_USE_FOSS_MAPS = true;
     public static final String PREF_FOSS_MAPS_VECTOR_TILE_STYLE = "fossMapsBaseStyleUrl";
     public static final String PREF_FOSS_MAPS_VECTOR_TILE_KEY = "fossMapsBaseTileKey";
 }

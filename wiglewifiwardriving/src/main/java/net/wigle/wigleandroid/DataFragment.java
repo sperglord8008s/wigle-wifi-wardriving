@@ -338,7 +338,7 @@ public final class DataFragment extends Fragment implements DialogListener {
                 MainActivity m = MainActivity.getMainActivity();
                 if (null != m) {
                     final SharedPreferences prefs = m.getSharedPreferences(PreferenceKeys.SHARED_PREFS, 0);
-                    final boolean useFossMaps = prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, false);
+                    final boolean useFossMaps = prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, PreferenceKeys.DEFAULT_USE_FOSS_MAPS);
                     // start db result activity
                     final Intent settingsIntent = new Intent(activity, useFossMaps ?
                             FossDBResultActivity.class : DBResultActivity.class);
@@ -550,7 +550,7 @@ public final class DataFragment extends Fragment implements DialogListener {
                         Logging.error("unable to get fragment activity");
                     }
                 });
-                final boolean useFossMaps = prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, false);
+                final boolean useFossMaps = prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, PreferenceKeys.DEFAULT_USE_FOSS_MAPS);
                 final Button manageGpxButton = view.findViewById(R.id.manage_gpx_button);
                 manageGpxButton.setOnClickListener(v -> {
                     final Intent gpxIntent = new Intent(a.getApplicationContext(),

@@ -3,8 +3,6 @@ package net.wigle.wigleandroid;
 import static android.view.View.VISIBLE;
 
 import static net.wigle.wigleandroid.ui.NetworkListUtil.getSignalBitmap;
-import static net.wigle.wigleandroid.util.PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_KEY;
-import static net.wigle.wigleandroid.util.PreferenceKeys.PREF_FOSS_MAPS_VECTOR_TILE_STYLE;
 
 import java.util.Map;
 
@@ -20,6 +18,7 @@ import android.widget.RelativeLayout;
 import net.wigle.wigleandroid.model.Network;
 import net.wigle.wigleandroid.model.NetworkType;
 import net.wigle.wigleandroid.util.FossConfigDialogUtil;
+import net.wigle.wigleandroid.util.FossMapStyleUtil;
 import net.wigle.wigleandroid.util.Logging;
 import net.wigle.wigleandroid.util.PreferenceKeys;
 
@@ -139,17 +138,7 @@ public class FossNetworkActivity extends AbstractNetworkActivity {
         try {
             mapView.onCreate(savedInstanceState);
             mapView.getMapAsync(mapLibreMap -> {
-                final String mapServerKey = prefs != null ?
-                        prefs.getString(PREF_FOSS_MAPS_VECTOR_TILE_KEY, null) : null;
-                final String mapServerUrl = prefs != null ?
-                        prefs.getString(PREF_FOSS_MAPS_VECTOR_TILE_STYLE, null) : null;
-
-                String styleUrl;
-                if (mapServerKey != null && !mapServerKey.isEmpty()) {
-                    styleUrl = mapServerUrl + mapServerKey;
-                } else {
-                    styleUrl = "https://demotiles.maplibre.org/style.json";
-                }
+                final String styleUrl = FossMapStyleUtil.getConfiguredStyleUrl(prefs);
                 try {
                     mapLibreMap.setStyle(styleUrl, style -> {
                         if ((network != null) && (network.getLatLng() != null)) {

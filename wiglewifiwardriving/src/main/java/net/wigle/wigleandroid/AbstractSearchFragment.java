@@ -235,7 +235,7 @@ public abstract class AbstractSearchFragment extends Fragment {
                 } else {
                     ListFragment.lameStatic.queryArgs.setSearchWiGLE(!local);
                     final Intent settingsIntent = new Intent(activity,
-                            prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, false) ?
+                            prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, PreferenceKeys.DEFAULT_USE_FOSS_MAPS) ?
                                     FossDBResultActivity.class : DBResultActivity.class);
                     startActivity(settingsIntent);
                 }

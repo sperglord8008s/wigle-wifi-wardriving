@@ -297,8 +297,10 @@ public final class MainActivity extends AppCompatActivity implements TextToSpeec
         //END DEBUG
         final int THREAD_ID = 31973;
         TrafficStats.setThreadStatsTag(THREAD_ID);
-        workAroundGoogleMapsBug();
         final SharedPreferences prefs = getSharedPreferences(PreferenceKeys.SHARED_PREFS, Context.MODE_PRIVATE);
+        if (!prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, PreferenceKeys.DEFAULT_USE_FOSS_MAPS)) {
+            workAroundGoogleMapsBug();
+        }
 
         ThemeUtil.setTheme(prefs);
         mainActivity = this;
@@ -983,26 +985,26 @@ public final class MainActivity extends AppCompatActivity implements TextToSpeec
             if (null != mainActivity) {
                 SharedPreferences prefs = mainActivity.getSharedPreferences(PreferenceKeys.SHARED_PREFS, Context.MODE_PRIVATE);
                 if (null != prefs) {
-                    if (prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, false)) {
+                    if (prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, PreferenceKeys.DEFAULT_USE_FOSS_MAPS)) {
                         return FossSearchFragment.class;
                     } else {
                         return SearchFragment.class;
                     }
                 }
             }
-            return SearchFragment.class;
+            return FossSearchFragment.class;
         } else if (navId == R.id.nav_map) {
             if (null != mainActivity) {
                 SharedPreferences prefs = mainActivity.getSharedPreferences(PreferenceKeys.SHARED_PREFS, Context.MODE_PRIVATE);
                 if (null != prefs) {
-                    if (prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, false)) {
+                    if (prefs.getBoolean(PreferenceKeys.PREF_USE_FOSS_MAPS, PreferenceKeys.DEFAULT_USE_FOSS_MAPS)) {
                         return FossMappingFragment.class;
                     } else {
                         return MappingFragment.class;
                     }
                 }
             }
-            return MappingFragment.class;
+            return FossMappingFragment.class;
         } else if (navId == R.id.nav_user_stats) {
             return UserStatsFragment.class;
         } else if (navId == R.id.nav_rank) {

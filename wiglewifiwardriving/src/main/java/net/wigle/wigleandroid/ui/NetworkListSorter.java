@@ -19,6 +19,7 @@ public class NetworkListSorter {
     public static final int CRYPTO_COMPARE = 12;
     public static final int FIND_TIME_COMPARE = 13;
     public static final int SSID_COMPARE = 14;
+    public static final int MAC_COMPARE = 15;
 
     public static final Comparator<Network> signalCompare = (a, b) -> b.getLevel() - a.getLevel();
 
@@ -29,6 +30,10 @@ public class NetworkListSorter {
     public static final Comparator<Network> findTimeCompare = (a, b) -> (int) (b.getConstructionTime() - a.getConstructionTime());
 
     public static final Comparator<Network> ssidCompare = (a, b) -> a.getSsid().compareTo( b.getSsid() );
+
+    /** Sort the full MAC/BSSID, not just the vendor OUI prefix. */
+    public static final Comparator<Network> macCompare = (a, b) ->
+            String.CASE_INSENSITIVE_ORDER.compare(a.getBssid(), b.getBssid());
 
     /**
      * Check preferences and return the correct comparator
@@ -53,6 +58,8 @@ public class NetworkListSorter {
                 return findTimeCompare;
             case SSID_COMPARE:
                 return ssidCompare;
+            case MAC_COMPARE:
+                return macCompare;
             default:
                 Logging.warn("fell through to default comparator");
                 return signalCompare;

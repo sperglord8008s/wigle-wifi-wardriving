@@ -619,9 +619,11 @@ public final class ListFragment extends Fragment implements ApiListener, DialogL
                 ArrayAdapter<String> adapter = new ArrayAdapter<>(
                         getActivity(), android.R.layout.simple_spinner_item);
                 final int[] listSorts = new int[]{ NetworkListSorter.CHANNEL_COMPARE, NetworkListSorter.CRYPTO_COMPARE,
-                        NetworkListSorter.FIND_TIME_COMPARE, NetworkListSorter.SIGNAL_COMPARE, NetworkListSorter.SSID_COMPARE };
+                        NetworkListSorter.FIND_TIME_COMPARE, NetworkListSorter.SIGNAL_COMPARE, NetworkListSorter.SSID_COMPARE,
+                        NetworkListSorter.MAC_COMPARE };
                 final String[] listSortName = new String[]{ getString(R.string.channel),getString(R.string.crypto),
-                        getString(R.string.found_time),getString(R.string.signal),getString(R.string.ssid) };
+                        getString(R.string.found_time),getString(R.string.signal),getString(R.string.ssid),
+                        getString(R.string.sort_mac_bssid) };
                 int listSort = prefs.getInt( PreferenceKeys.PREF_LIST_SORT, NetworkListSorter.SIGNAL_COMPARE );
                 int periodIndex = 0;
                 for ( int i = 0; i < listSorts.length; i++ ) {
@@ -723,7 +725,7 @@ public final class ListFragment extends Fragment implements ApiListener, DialogL
                 final MainActivity main = MainActivity.getMainActivity();
                 if (null != main) {
                     final SharedPreferences prefs = main.getSharedPreferences(PreferenceKeys.SHARED_PREFS, 0);
-                    fossMode = prefs.getBoolean(PREF_USE_FOSS_MAPS, false);
+                    fossMode = prefs.getBoolean(PREF_USE_FOSS_MAPS, PreferenceKeys.DEFAULT_USE_FOSS_MAPS);
                 }
                 MainActivity.getNetworkCache().put(network.getBssid(), network);
                 final Intent intent = new Intent(activity, fossMode ? FossNetworkActivity.class : NetworkActivity.class);
