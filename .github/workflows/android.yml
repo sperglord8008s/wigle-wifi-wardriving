@@ -22,6 +22,8 @@ jobs:
         cache: gradle
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+    - name: Verify network row layouts across Android API variants
+      run: python3 scripts/check_network_row_layouts.py
     - name: Configure persistent APK signing key
       env:
         SIGNING_KEYSTORE_B64: ${{ secrets.WIGLE_SIGNING_KEYSTORE_BASE64 }}
